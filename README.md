@@ -26,11 +26,16 @@ y nunca se envía a ningún servidor propio ni se sube a internet.
 
 ## 🚀 Publicación en GitHub Pages
 
-El repositorio incluye un workflow (`.github/workflows/deploy.yml`) que publica el sitio
-automáticamente en GitHub Pages con cada `push` a la rama de desarrollo.
+> ⚠️ GitHub Pages solo funciona en repos **públicos** (plan gratuito) o **privados con plan de pago**.
+> Si tu repo es privado y usas el plan gratuito, primero hazlo público en
+> *Settings → General → Change repository visibility*.
 
-Si Pages no se activa solo, ve a **Settings → Pages** del repositorio y en *Source*
-selecciona **GitHub Actions**.
+Para publicarlo (un solo clic):
+
+1. Ve a **Settings → Pages** del repositorio.
+2. En *Source* elige **Deploy from a branch**.
+3. Selecciona la rama `claude/fashion-styling-chatbot-o0gx7x` y la carpeta `/ (root)`. Guarda.
+4. Espera ~1 minuto y abre `https://<tu-usuario>.github.io/clouding/`.
 
 ## 🛠️ Estructura
 
