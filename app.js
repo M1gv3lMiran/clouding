@@ -63,16 +63,11 @@ $('settingsOverlay').addEventListener('click', (e) => { if (e.target.id === 'set
 $('saveSettings').addEventListener('click', saveSettings);
 $('clearChat').addEventListener('click', clearChat);
 
-// Abre ajustes automáticamente si no hay clave
-if (!getKey()) openSettings();
-
 // ---------- Envío ----------
 async function send() {
   if (sending) return;
   const text = inputEl.value.trim();
   if (!text && !pending.length) return;
-
-  if (!getKey()) { openSettings(); return; }
 
   // Construye el contenido del mensaje del usuario
   const content = [];
@@ -92,7 +87,70 @@ async function send() {
   autoGrow();
   clearWelcome();
 
-  await requestReply();
+  if (getKey()) await requestReply();
+  else await demoReply();
+}
+
+// ---------- Modo demo (sin clave de API) ----------
+let demoBannerShown = false;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function showDemoBannerOnce() {
+  if (demoBannerShown) return;
+  demoBannerShown = true;
+  const n = document.createElement('div');
+  n.className = 'notice';
+  n.innerHTML = '✨ <strong>Modo demo</strong>: estas son respuestas de ejemplo. Añade tu clave de API en ⚙️ para activar la IA real que analiza tus fotos.';
+  messagesEl.appendChild(n);
+  scrollToBottom();
+}
+
+function demoText(hadImages) {
+  const intro = hadImages
+    ? 'He recibido tu foto 👗. En **modo demo** todavía no puedo analizarla de verdad, pero así se vería mi respuesta:\n\n'
+    : '';
+  return intro +
+`**Cómo combinarla**
+- Parte de una base neutra (blanco, beige, azul marino o gris) y añade un único punto de color con un accesorio.
+- Juega con las proporciones: si la prenda es holgada arriba, elige algo más ajustado abajo (y al revés).
+
+**Cuándo y dónde llevarla**
+- Perfecta para un look de diario o una tarde informal.
+- En invierno súmale una chaqueta estructurada o un abrigo largo; en verano, sandalias o zapatillas blancas.
+
+**Consejo de compra**
+- Prioriza tejidos versátiles y colores que combinen con lo que ya tienes: así cada prenda te cunde mucho más.
+
+_Cuando añadas tu clave de API en ⚙️, responderé de verdad, analizando tus fotos, tu estilo y la ocasión._`;
+}
+
+async function demoReply() {
+  sending = true;
+  sendBtn.disabled = true;
+  showDemoBannerOnce();
+  const bubble = renderTyping();
+  await sleep(650);
+
+  const last = history[history.length - 1];
+  const hadImages = last.content.some((b) => b.type === 'image');
+  const text = demoText(hadImages);
+
+  bubble.classList.remove('typing');
+  bubble.innerHTML = '';
+  const words = text.split(' ');
+  let acc = '';
+  for (let i = 0; i < words.length; i++) {
+    acc += (i ? ' ' : '') + words[i];
+    bubble.innerHTML = renderMarkdown(acc);
+    scrollToBottom();
+    await sleep(26);
+  }
+
+  history.push({ role: 'assistant', content: [{ type: 'text', text }] });
+  trimHistory();
+  saveHistory();
+  sending = false;
+  sendBtn.disabled = false;
 }
 
 async function requestReply() {
@@ -278,6 +336,7 @@ function renderWelcome() {
     <div style="font-size:44px">👗✨</div>
     <h2>¡Hola! Soy tu asesora de estilo</h2>
     <p>Envíame una <strong>foto de una prenda</strong> 📷 o descríbeme lo que tienes, y te diré cómo combinarla, cuándo llevarla y qué te conviene comprar.</p>
+    <p style="margin-top:10px;font-size:13px;opacity:.85">Puedes probar la interfaz ahora mismo en <strong>modo demo</strong> (respuestas de ejemplo). Para activar la IA real, añade tu clave en ⚙️.</p>
     <div class="chips">
       <button class="chip" data-p="Tengo unos vaqueros azules rectos, ¿con qué los combino para ir a la oficina?">👖 Combinar unos vaqueros</button>
       <button class="chip" data-p="¿Qué me pongo para una boda de tarde en verano?">💍 Look para una boda</button>
